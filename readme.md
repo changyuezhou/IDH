@@ -560,6 +560,7 @@ Thanks for using MariaDB!
   
   ```
 install jdk /home/suxin/test_install jdk-8u171-linux-x64.tar.gz 1.8.0_171 suxin.........
+
 Copying JDK 1.8.0_171 to all hosts...
 Installing JDK 1.8.0_171 on all hosts...
 Set JAVA_HOME env to all hosts...
@@ -593,8 +594,34 @@ Installing JDK 1.8.0_171 on all hosts success
        172.23.0.22
        172.23.0.23
    ```
-     
-  * 4) 执行命令
+   
+  * 4) 编辑文件 conf/zoo.cfg
+  
+  ```
+  vi cond/zoo.cfg
+  ```
+  
+  * 5) 修改或添加配置
+  
+  ```
+  # The directory where the snapshot is stored.
+  
+  dataDir=${ZOOKEEPER_HOME}/data
+  dataLogDir=${ZOOKEEPER_HOME}/logs  
+  ```
+  
+  ```
+  To configure a ZooKeeper instance you add the following parameter to the file "zoo.cfg":
+  server.<id> = <zk_host_address>:<zk_port_1>:<zk_port_2>[:<zk_role>];[<client_port_address>:]<client_port>
+  
+  example:
+  server.1=AZ-TEST-DEV4:2888:3888
+  server.2=AZ-TEST-DEV2:2888:3888
+  server.3=AZ-TEST-DEV3:2888:3888  
+  
+  ```
+  
+  * 6) 执行命令
   
   ```
   install-zookeeper [install] [APP_HOME] [ZookeeperFile] [ZOOKEEPER_VERSION] [MYID_LIST:HOSTNAME:ID,HOSTNAME:ID] [USER]
@@ -611,7 +638,7 @@ Installing JDK 1.8.0_171 on all hosts success
   Install ZOOKEEPER service on all hosts success...  
   ```
   
-  * 5) 可选：增加服务自启动
+  * 7) 可选：增加服务自启动
   
   ```
   install-zookeeper [checkconfigon] [ZOOKEEPER_HOME]
@@ -626,19 +653,19 @@ Installing JDK 1.8.0_171 on all hosts success
   
   ```
   
-  * 6) 用3.7步骤创建的用户登录Zookeeper服务器
+  * 8) 用3.7步骤创建的用户登录Zookeeper服务器
   
    ```
    ssh -p 22 user@127.0.0.1
    ```
      
-  * 7) 执行命令
+  * 9) 执行命令
   
   ```
   ${ZOOKEEPER_HOME}/bin/zkServer.sh start
   ```
   
-  * 8) 验证,看到 QuorumPeerMain 进程表示成功
+  * 10) 验证,看到 QuorumPeerMain 进程表示成功
   
   ```
   ${JAVA_HOME}/bin/jps 
@@ -649,4 +676,4 @@ Installing JDK 1.8.0_171 on all hosts success
       26577 Jps
    ```
    
-  * 9) 重复6 - 8步骤，直至完成zookeeper集群所有服务器.
+  * 10) 重复6 - 8步骤，直至完成zookeeper集群所有服务器.
