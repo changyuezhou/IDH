@@ -59,6 +59,13 @@
    * 1) 超级权限用户登录服务器，进入install目录
    * 2) vi all_hosts
    * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+
+   ```
+       172.23.0.21
+       172.23.0.22
+       172.23.0.23
+   ```
+   
    * 4) cp /etc/hosts ./
    * 5) 编辑 hosts 文件，将集群服务器对应的 ip地址和hostname 都加进该文件,并保存退出
    * 6) pdcp -w ^all_hosts hosts /etc/hosts
@@ -77,7 +84,14 @@
 ### 3.9 创建挂载数据盘目录 <a name="create_mount_dir"/>
    * 1) 用3.7步骤创建的用户登录跳板机,进入install目录
    * 2) vi all_hosts
-   * 3) 将所有服务器写入文件，一行一个服务器，并保存退出   
+   * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+
+   ```
+       172.23.0.21
+       172.23.0.22
+       172.23.0.23
+   ```
+      
    * 4) pdsh -w ^all_hosts mkdir -p /home/${3.7步骤创建的用户名}/application
 
 ### 3.10 挂载数据盘（可选）<a name="mount_disk"/>
@@ -89,6 +103,13 @@
    * 6) 超级权限用户登录跳板机,进入install目录
    * 7) vi all_hosts
    * 8) 将所有服务器写入文件，一行一个服务器，并保存退出 
+   
+   ```
+       172.23.0.21
+       172.23.0.22
+       172.23.0.23
+   ```
+      
    * 9) pdsh -w ^all_hosts sudo mount ${步骤2看到的数据盘标识，例：/dev/sdb,/dev/sdc}  /home/${3.7步骤创建的用户名}/application(3.9步骤创建的挂载目录)
    * 10) pdsh -w ^all_hosts sudo chown ${3.7步骤创建的用户}:${3.7步骤创建的用户组} /home/${3.7步骤创建的用户名}/application(3.9步骤创建的挂载目录)
    * 11）sudo blkid (需要每台服务器独立操作的步骤)
@@ -100,6 +121,13 @@
    * 1) 超级权限用户登录服务器
    * 2) vi all_hosts
    * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+   
+   ```
+       172.23.0.21
+       172.23.0.22
+       172.23.0.23
+   ```
+      
    * 4) pdsh -w ^all_hosts sudo systemctl stop firewalld.service
    * 5) pdsh -w ^hadoop_cluster sudo systemctl disable firewalld.service
    * 6) 如果不能关闭防火墙，可以使用 pdsh -w ^hadoop_cluster sudo firewall-cmd --zone=public --add-port=${PORT}/tcp --permanent 命令添加放行端口号
@@ -117,7 +145,7 @@
    
    
 ## 4. MySQL 安装 <a name="mysql_install"/>
-   *  Step 1. Add MariaDB Yum Repository
+   ###  Step 1. Add MariaDB Yum Repository
    *   1) sudo vi /etc/yum.repos.d/MariaDB.repo
    *   2) 添加如下内容进文件,并保存退出
    
@@ -129,20 +157,27 @@
          gpgcheck=1   
    ```
 
-   *  Step 2. Install MariaDB in CentOS 7
+   ###  Step 2. Install MariaDB in CentOS 7
    * 1) sudo yum groupinstall -y mariadb*
    * 2) sudo systemctl start mariadb
    * 3) sudo systemctl enable mariadb
    * 4) sudo systemctl status mariadb
    
    
-   * Step 3. Secure MariaDB in CentOS 7
+   ### Step 3. Secure MariaDB in CentOS 7
    * 1) mysql_secure_installation 完成相应的步骤即可.
    
 ## 5 JDK 安装 <a name="jdk_install"/>
   * 1) 用3.7步骤创建的用户登录跳板机,进入install/jdk目录
   * 2) vi jdk_hosts
   * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+
+   ```
+       172.23.0.21
+       172.23.0.22
+       172.23.0.23
+   ```
+     
   * 4) install-jdk [install] [APP_HOME] [JDK_FILE] [JAVA_VERSION] [USER]
   * 5) 可选： 用3.7步骤创建的用户登录跳板机, 输入jps命令，如果能运行则安装成功.
   
@@ -150,9 +185,22 @@
   * 1) 用3.7步骤创建的用户登录跳板机,进入install/zookeeper目录
   * 2) vi zookeeper_hosts
   * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+  
+   ```
+       172.23.0.21
+       172.23.0.22
+       172.23.0.23
+   ```
+     
   * 4) install-zookeeper [install] [APP_HOME] [ZookeeperFile] [ZOOKEEPER_VERSION] [MYID_LIST:HOSTNAME:ID,HOSTNAME:ID] [USER]
   * 5) 可选：增加服务自启动 install-zookeeper [checkconfigon] [ZOOKEEPER_HOME]
   * 6) 用3.7步骤创建的用户登录Zookeeper服务器
   * 7) ${ZOOKEEPER_HOME}/bin/zkServer.sh start
   * 8) ${JAVA_HOME}/bin/jps 看到 QuorumPeerMain 进程表示成功
+  
+   ```
+      90448 QuorumPeerMain
+      26577 Jps
+   ```
+   
   * 9) 重复6 - 8步骤，直至完成zookeeper集群所有服务器.
