@@ -46,12 +46,26 @@
    * 1) 超级权限用户登录跳板机,进入install目录
    * 2) vi all_hosts
    * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+   
+   ```
+       172.23.0.21
+       172.23.0.22
+       172.23.0.23
+   ```
+      
    * 4) pdsh -w ^all_host sudo yum install -y expect
    
 ### 3.5 集群安装 pdsh <a name="install_all_pdsh"/>
    * 1) 超级权限用户登录跳板机,进入install目录
    * 2) vi all_hosts
    * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+   
+   ```
+       172.23.0.21
+       172.23.0.22
+       172.23.0.23
+   ```
+      
    * 4) sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
    * 5) sudo yum install -y pdsh
 
@@ -97,6 +111,19 @@
 ### 3.10 挂载数据盘（可选）<a name="mount_disk"/>
    * 1) 超级权限用户登录服务器
    * 2) sudo lsblk
+   
+   ```
+NAME        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+fd0           2:0    1    4K  0 disk 
+sda           8:0    0   32G  0 disk 
+├─sda1        8:1    0    1G  0 part /boot
+└─sda2        8:2    0   31G  0 part 
+  ├─cl-root 253:0    0 27.8G  0 lvm  /
+  └─cl-swap 253:1    0  3.2G  0 lvm  [SWAP]
+sdb           8:16   0    2T  0 disk /home/apps/application
+sr0          11:0    1 1024M  0 rom
+   ```
+      
    * 3) sudo mkfs.ext4 ${步骤2看到的数据盘标识，例：/dev/sdb,/dev/sdc} 
    * 4) 按步骤选择Y即可
    * 5) 重复1 - 4步骤，直至完成所有服务器
@@ -113,8 +140,32 @@
    * 9) pdsh -w ^all_hosts sudo mount ${步骤2看到的数据盘标识，例：/dev/sdb,/dev/sdc}  /home/${3.7步骤创建的用户名}/application(3.9步骤创建的挂载目录)
    * 10) pdsh -w ^all_hosts sudo chown ${3.7步骤创建的用户}:${3.7步骤创建的用户组} /home/${3.7步骤创建的用户名}/application(3.9步骤创建的挂载目录)
    * 11）sudo blkid (需要每台服务器独立操作的步骤)
+   
+   ```
+/dev/sdb: UUID="7348f362-bba7-4b2f-b55f-2fdb4c3a9a41" TYPE="ext4" 
+/dev/sda1: UUID="f3a6907b-7ec0-4ad4-be11-d46928592754" TYPE="xfs" 
+/dev/sda2: UUID="8GfyzU-aEw6-4WX2-TL0R-gqT0-C1Qg-JvHBST" TYPE="LVM2_member" 
+/dev/mapper/cl-root: UUID="1ca5c173-766f-4020-9cd0-c02a228720e8" TYPE="xfs" 
+/dev/mapper/cl-swap: UUID="f6361ffa-c19c-4507-a99f-17d32705a793" TYPE="swap"
+   ```
+   
    * 12) sudo vim /etc/fstab
    * 13) 将 "UUID=${步骤11看到的数据盘（步骤9挂载的/dev/sdb或者/dev/sdc）的UUID}  /home/${3.7步骤创建的用户名}/application(3.9步骤创建的挂载目录) ext4 defaults 0 0" 加到末行
+   
+   ```
+#
+# /etc/fstab
+# Created by anaconda on Wed Jan  3 10:52:36 2018
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk'
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
+#
+/dev/mapper/cl-root     /                       xfs     defaults        0 0
+UUID=f3a6907b-7ec0-4ad4-be11-d46928592754 /boot                   xfs     defaults        0 0
+/dev/mapper/cl-swap     swap                    swap    defaults        0 0
+UUID=7348f362-bba7-4b2f-b55f-2fdb4c3a9a41 /home/apps/application ext4 defaults 0 0
+   ```
+   
    * 14) 重复11 - 13步骤，直至完成所有服务器
 
 ### 3.11 防火墙设置（可选）<a name="set_firewalld"/>
