@@ -118,8 +118,8 @@
    
 ## 4. MySQL 安装 <a name="mysql_install"/>
    *  Step 1. Add MariaDB Yum Repository
-   **   1) sudo vi /etc/yum.repos.d/MariaDB.repo
-   **   2) 添加如下内容进文件,并保存退出
+   *   1) sudo vi /etc/yum.repos.d/MariaDB.repo
+   *   2) 添加如下内容进文件,并保存退出
    > {
          [mariadb]
          name = MariaDB
@@ -129,14 +129,14 @@
      }
      
    *  Step 2. Install MariaDB in CentOS 7
-   ** 1) sudo yum groupinstall mariadb*
-   ** 2) sudo systemctl start mariadb
-   ** 3) sudo systemctl enable mariadb
-   ** 4) sudo systemctl status mariadb
+   * 1) sudo yum groupinstall mariadb*
+   * 2) sudo systemctl start mariadb
+   * 3) sudo systemctl enable mariadb
+   * 4) sudo systemctl status mariadb
    
    
    * Step 3. Secure MariaDB in CentOS 7
-   ** mysql_secure_installation 完成相应的步骤即可.
+   * 1) mysql_secure_installation 完成相应的步骤即可.
    
 ## 5 JDK 安装 <a name="jdk_install"/>
   * 1) 用3.7步骤创建的用户登录跳板机,进入install/jdk目录
