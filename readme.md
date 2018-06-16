@@ -601,12 +601,29 @@ Installing JDK 1.8.0_171 on all hosts success
   ```
   
   ```
+  install zookeeper /home/suxin/test_install zookeeper-3.4.10.tar.gz 3.4.10 127.0.0.1:1 suxin .........
+  
+  Copying Zookeeper 3.4.10 to all hosts...
+  Add ZOOKEEPER_HOME to PATH to all hosts...
+  Copying ZOOKEEPER config file to all hosts...
+  Set myid:127.0.0.1:1 for ZOOKEEPER to all hosts...
+  Set myid:1 for ZOOKEEPER to server:127.0.0.1 ...........
+  Install ZOOKEEPER service on all hosts success...  
   ```
   
   * 5) 可选：增加服务自启动
   
   ```
   install-zookeeper [checkconfigon] [ZOOKEEPER_HOME]
+  ```
+  
+  ```
+  ./install-zookeeper.sh checkconfigon /home/suxin/test_install/zookeeper
+  
+  check config on /home/suxin/test_install/zookeeper .........
+  Check config on for zookeeper ........
+  /home/suxin/test_install/zookeeper/bin/zkServer.sh start
+  
   ```
   
   * 6) 用3.7步骤创建的用户登录Zookeeper服务器
