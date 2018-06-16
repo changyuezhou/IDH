@@ -31,12 +31,35 @@
    选择集群服务器中某台服务器作为安装跳板机,以下简称跳板机，所有的安装文件都将会存放在此台服务器中.
 ### 3.1 安装 expect <a name="install_expect"/>
    * 1) 超级权限用户登录跳板机
-   * 2) sudo yum install -y expect
+   
+   ```
+   ssh -p 22 user@127.0.0.1
+   ```
+   
+   * 2) install
+   
+   ```
+   sudo yum install -y expect
+   ```
 
 ### 3.2 安装 pdsh <a name="install_pdsh"/>
    * 1) 超级权限用户登录跳板机
-   * 2) sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-   * 3) sudo yum install -y pdsh
+   
+   ```
+   ssh -p 22 user@127.0.0.1
+   ```
+   
+   * 2) install epel
+   
+   ```
+   sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+   ```
+   
+   * 3) install
+   
+   ```
+   sudo yum install -y pdsh
+   ```   
 
 ### 3.3 超级权限用户免密登录 <a name="root_create_ssh_key"/>
    * 1) 超级权限用户登录跳板机,进入安装目录中的initial目录
@@ -139,7 +162,8 @@ sr0          11:0    1 1024M  0 rom
       
    * 9) pdsh -w ^all_hosts sudo mount ${步骤2看到的数据盘标识，例：/dev/sdb,/dev/sdc}  /home/${3.7步骤创建的用户名}/application(3.9步骤创建的挂载目录)
    * 10) pdsh -w ^all_hosts sudo chown ${3.7步骤创建的用户}:${3.7步骤创建的用户组} /home/${3.7步骤创建的用户名}/application(3.9步骤创建的挂载目录)
-   * 11）sudo blkid (需要每台服务器独立操作的步骤)
+   
+   * 11) sudo blkid (需要每台服务器独立操作的步骤)
    
    ```
 /dev/sdb: UUID="7348f362-bba7-4b2f-b55f-2fdb4c3a9a41" TYPE="ext4" 
