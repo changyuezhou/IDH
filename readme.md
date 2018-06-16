@@ -611,10 +611,10 @@ Installing JDK 1.8.0_171 on all hosts success
   ```
   
   ```
-  To configure a ZooKeeper instance you add the following parameter to the file "zoo.cfg":
-  server.<id> = <zk_host_address>:<zk_port_1>:<zk_port_2>[:<zk_role>];[<client_port_address>:]<client_port>
+  # To configure a ZooKeeper instance you add the following parameter to the file "zoo.cfg":
+  # server.<id> = <zk_host_address>:<zk_port_1>:<zk_port_2>[:<zk_role>];[<client_port_address>:]<client_port>
   
-  example:
+  # example:
   server.1=AZ-TEST-DEV4:2888:3888
   server.2=AZ-TEST-DEV2:2888:3888
   server.3=AZ-TEST-DEV3:2888:3888  
