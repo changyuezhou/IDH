@@ -120,6 +120,7 @@
    *  Step 1. Add MariaDB Yum Repository
    *   1) sudo vi /etc/yum.repos.d/MariaDB.repo
    *   2) 添加如下内容进文件,并保存退出
+   
    ```
          [mariadb]
          name = MariaDB
@@ -127,9 +128,9 @@
          gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
          gpgcheck=1   
    ```
-     
+
    *  Step 2. Install MariaDB in CentOS 7
-   * 1) sudo yum groupinstall mariadb*
+   * 1) sudo yum groupinstall -y mariadb*
    * 2) sudo systemctl start mariadb
    * 3) sudo systemctl enable mariadb
    * 4) sudo systemctl status mariadb
