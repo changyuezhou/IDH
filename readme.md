@@ -18,6 +18,7 @@
 ## [4 MySQL 安装(Hive Metastore)](#mysql_install)
 ## [5 JDK 安装](#jdk_install)
 ## [6 Zookeeper 安装](#zookeeper_install)
+## [7 Hadoop 安装](#hadoop_install)
 
 
 -------------------
@@ -559,8 +560,9 @@ Thanks for using MariaDB!
   ```
   
   ```
+  ./install-jdk install /home/suxin/test_install jdk-8u171-linux-x64.tar.gz 1.8.0_171 suxin
+  
 install jdk /home/suxin/test_install jdk-8u171-linux-x64.tar.gz 1.8.0_171 suxin.........
-
 Copying JDK 1.8.0_171 to all hosts...
 Installing JDK 1.8.0_171 on all hosts...
 Set JAVA_HOME env to all hosts...
@@ -581,7 +583,7 @@ Installing JDK 1.8.0_171 on all hosts success
    cd install/zookeeper
    ```
 
-   * 2) 编辑文件
+   * 2) 编辑文件 zookeeper_hosts
    
    ```
    vi zookeeper_hosts
@@ -677,3 +679,423 @@ Installing JDK 1.8.0_171 on all hosts success
    ```
    
   * 10) 重复6 - 8步骤，直至完成zookeeper集群所有服务器.
+  
+## 7 Hadoop 安装 <a name="hadoop_install"/>
+  * 1) 用3.7步骤创建的用户登录跳板机,进入install/hadoop目录
+  
+   ```
+   ssh -p 22 user@127.0.0.1
+   cd install/hadoop
+   ```
+
+   * 2) 编辑文件 hadoop_hosts
+   
+   ```
+   vi hadoop_hosts
+   ```
+     
+  * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+  
+   ```
+   172.23.0.21
+   172.23.0.22
+   172.23.0.23
+   ```
+   
+  * 4) 编辑文件 conf/core-site.xml
+  
+  ```
+  <property>
+    <name>fs.default.name</name>
+    <value>hdfs://${APP_NAME}</value>
+  </property>
+  ``` 
+  
+  ```
+  <property>
+    <name>ha.zookeeper.quorum</name>
+    <value>${IP1}:${PORT},${IP2}:${PORT},${IP3}:${PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.journalnode.edits.dir</name>
+    <value>file:${DIRECTORY_PATH}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>hadoop.tmp.dir</name>
+    <value>file:${HADOOP_TMP}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>fs.trash.interval</name>
+    <value>${TRASH_INTERVAL}</value>
+  </property>
+  ```
+
+  * 5) 编辑文件 conf/hadoop-env.sh
+  
+  ```
+  # set JAVA_HOME
+  
+  export JAVA_HOME=${JAVA_HOME}
+  ```
+  
+  * 6) 编辑文件 conf/hdfs-site.xml
+  
+  ```
+  <property>
+    <name>dfs.nameservices</name>
+    <value>${APP_NAME}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+    <value>false</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.ha.namenodes.${APP_NAME}</name>
+    <value>nn1,nn2</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.namenode.rpc-address.${APP_NAME}.nn1</name>
+    <value>${NAME_NODE1}:${NN1_RPC_PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.namenode.rpc-address.${APP_NAME}.nn2</name>
+    <value>${NAME_NODE2}:${NN2_RPC_PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.namenode.http-address.${APP_NAME}.nn1</name>
+    <value>${NAME_NODE1}:${NN1_HTTP_PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.namenode.http-address.${APP_NAME}.nn2</name>
+    <value>${NAME_NODE2}:${NN2_HTTP_PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.namenode.shared.edits.dir</name>
+    <value>qjournal://${NodeManage1}:${QJOURNAL_PORT};${NodeManage2}:${QJOURNAL_PORT};${NodeManage3}:${QJOURNAL_PORT}/${APP_NAME}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.journalnode.edits.dir</name>
+    <value>${JOURNAL_DIRECOTRY}</value>
+  </property>
+  ```
+  
+  ```
+  <property>
+    <name>dfs.client.failover.proxy.provider.${APP_NAME}</name>
+    <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.ha.automatic-failover.enabled</name>
+    <value>true</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.ha.fencing.methods</name>
+    <value>sshfence</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.namenode.name.dir</name>
+    <value>file:${NAME_NODE_DIR}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.datanode.data.dir</name>
+    <value>file:${DATA_NODE_DIR}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.replication</name>
+    <value>${REPLICATION}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.webhdfs.enabled</name>
+    <value>true</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.permissions.superusergroup</name>
+    <value>staff</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>dfs.permissions.enabled</name>
+    <value>false</value>
+  </property>  
+  ```
+  
+  7 *) 编辑 conf/mapred-site.xml
+  
+  ```
+  <property>
+    <name>mapreduce.framework.name</name>
+    <value>yarn</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>mapreduce.jobtracker.http.address</name>
+    <value>${RESOURCE_MANAGER}:${JOBTRACKER_HTTP_PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>mapreduce.jobhisotry.address</name>
+    <value>${JOBHISTORY_NODE}:${JOBHISTORY_PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>mapreduce.jobhistory.webapp.address</name>
+    <value>${JOBHISTORY_NODE}:${JOBHISTORY_WEBAPP_PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>mapreduce.jobhistory.done-dir</name>
+    <value>/jobhistory/done</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>mapreduce.intermediate-done-dir</name>
+    <value>/jobhisotry/done_intermediate</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>mapreduce.job.ubertask.enable</name>
+    <value>true</value>
+  </property>  
+  ```
+  
+  * 8) 编辑文件 conf/yarn-site.xml
+  
+  ```
+  <property>
+    <name>yarn.resourcemanager.hostname</name>
+    <value>${RESOURCE_MANAGER}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>yarn.nodemanager.aux-services</name>
+    <value>mapreduce_shuffle</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+    <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>yarn.resourcemanager.address</name>
+    <value>${RESOURCE_MANAGER}:${RM_PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>yarn.resourcemanager.scheduler.address</name>
+    <value>${RESOURCE_MANAGER}:${SCHEDULER_PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>yarn.resourcemanager.resource-tracker.address</name>
+    <value>${RESOURCE_MANAGER}:${RESOURCE_TRACKER_PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>yarn.resourcemanager.admin.address</name>
+    <value>${RESOURCE_MANAGER}:${ADMIN_PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>yarn.resourcemanager.webapp.address</name>
+    <value>${RESOURCE_MANAGER}:${WEB_APP_PORT}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>yarn.log-aggregation-enable</name>
+    <value>true</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>yarn.log-aggregation.retain-seconds</name>
+    <value>${RETAIN_SECONDS}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>yarn.log-aggregation.retain-check-interval-seconds</name>
+    <value>${RETAIN_CHECK_INTERVAL}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>yarn.nodemanager.remote-app-log-dir</name>
+    <value>${REMOTE_APP_LOG_DIR}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>yarn.nodemanager.remote-app-log-dir-suffix</name>
+    <value>logs</value>
+  </property>  
+  ```
+  
+  * 9) 编辑文件 conf/slaves
+  
+  ```
+  # hostname
+  
+  172.23.0.21
+  172.23.0.22
+  172.23.0.23  
+  ```
+  
+  * 10) 执行安装命令
+  
+  ```
+  install-hadoop install [APP_HOME] [HADOOP_FILE] [HADOOP_VERSION] [USER]
+  ```
+  
+  ```
+  ./install-hadoop.sh install /home/suxin/test_install hadoop-2.8.3.tar.gz 2.8.3 suxin
+  
+  install hadoop /home/suxin/test_install hadoop-2.8.3.tar.gz 2.8.3 suxin .........
+  Copying Hadoop 2.8.3 to all hosts...
+  Set HADOOP_HOME env to all hosts...
+  Copying Hadoop config file to all hosts...
+  Installing Hadoop to all hosts success ...  
+  ```
+  
+  * 11) 初始化
+  
+  ```
+  install-hadoop initial [NameNode] [SecondaryNameNode] [ResourceManager]
+  ```
+  
+  ```
+  ./install-hadoop.sh initial Hadoop HBase Hadoop
+  
+  
+  initial hadoop NameNode:Hadoop SecondaryNameNode:HBase ResourceManager:Hadoop .........
+  Initial NameNode:  SecondaryNameNode: HBase ResourceManager:Hadoop ...
+  NameNode: Hadoop start .................
+  Hadoop: starting namenode, logging to /home/apps/application/cluster/hadoop-2.8.3/logs/hadoop-apps-namenode-Hadoop.out
+  NameNode: HBase bootstrapStandby .................
+  HBase: 18/06/14 23:19:36 INFO namenode.NameNode: STARTUP_MSG: 
+  HBase: /************************************************************
+  HBase: STARTUP_MSG: Starting NameNode
+  HBase: STARTUP_MSG:   user = apps
+  HBase: STARTUP_MSG:   host = HBase.sh.21vevdc.com/172.23.0.22
+  HBase: STARTUP_MSG:   args = [-bootstrapStandby]  
+  ```
+  
+  * 12) 关闭服务
+  
+  ```
+  ssh -p 22 ResourceManage
+  ${HADOOP_HOME}/sbin/stop-all.sh
+  ```
+  
+  * 13) 启动服务
+  
+  ```
+  ssh -p 22 ResourceManage
+  ${HADOOP_HOME}/sbin/start-all.sh  
+  ```
+  
+  * 14) 验证,出现如下进程表示成功
+  
+  ```
+  ssh -p 22 ResourceManage
+  
+  jps
+  ```
+  
+  ```
+  40550 DataNode
+  40778 JournalNode
+  41229 NodeManager
+  40431 NameNode
+  60312 Jps
+  40987 DFSZKFailoverController
+  41116 ResourceManager  
+  ```
