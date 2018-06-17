@@ -19,7 +19,7 @@
 ## [5 JDK 安装](#jdk_install)
 ## [6 Zookeeper 安装](#zookeeper_install)
 ## [7 Hadoop 安装](#hadoop_install)
-
+## [8 HBase 安装](#hbase_install)
 
 -------------------
 ## 1. 关于文档 <a name="about_doc"/>
@@ -875,7 +875,7 @@ Installing JDK 1.8.0_171 on all hosts success
   </property>  
   ```
   
-  7 *) 编辑 conf/mapred-site.xml
+  * 7) 编辑 conf/mapred-site.xml
   
   ```
   <property>
@@ -1099,3 +1099,176 @@ Installing JDK 1.8.0_171 on all hosts success
   40987 DFSZKFailoverController
   41116 ResourceManager  
   ```
+  
+## 8 HBase 安装 <a name="hbase_install"/>
+  * 1) 用3.7步骤创建的用户登录跳板机,进入install/hbase目录
+  
+   ```
+   ssh -p 22 user@127.0.0.1
+   cd install/hbase
+   ```
+
+   * 2) 编辑文件 hbase_hosts
+   
+   ```
+   vi hbase_hosts
+   ```
+     
+  * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+  
+   ```
+   172.23.0.21
+   172.23.0.22
+   172.23.0.23
+   ```
+   
+  * 4) 编辑 conf/hbase-env.sh
+  
+  ```
+  export JAVA_HOME=${JAVA_HOME}
+  ``` 
+  
+  * 5) 编辑 conf/hbase-site.xml
+  
+  ```
+  <property>
+    <name>hbase.rootdir</name>
+    <value>hdfs://${NAME_NODE}:${NN_PORT}/hbase</value>
+  </property>  
+  ```
+
+  ```
+  <property>
+    <name>hbase.cluster.distributed</name>
+    <value>true</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>hbase.zookeeper.quorum</name>
+    <value>${ZOOKEEPER_IP1},${ZOOKEEPER_IP2},${ZOOKEEPER_IP3}</value>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>hbase.zookeeper.property.dataDir</name>
+    <value>${HBASE_HOME}/zookeeper</value>
+  </property>  
+  ```
+  
+  * 6) 编辑 conf/regionservers
+  
+  ```
+  172.23.0.21
+  172.23.0.22
+  172.23.0.23  
+  ```
+  
+  * 7) 安装
+  
+  ```
+  install-hbase [install] [APP_HOME] [HBASE_FILE] [HBASE_VERSION] [HADOOP_HOME] [USER]
+  ```
+  
+  ```
+  ./install-hbase.sh install /home/suxin/test_install hbase-1.2.6-bin.tar.gz 1.2.6 /home/suxin/test_install/hadoop suxin
+  
+  
+  install hbase /home/suxin/test_install hbase-1.2.6-bin.tar.gz 1.2.6 /home/suxin/test_install/hadoop suxin .........
+  Copying HBase 1.2.6 to all hosts...
+  Set HBASE_HOME env to all hosts...
+  Create Zookeeper directory for all hosts...
+  Copying Hadoop config file to all hosts...
+  Copying HBase config file to all hosts...
+  Installing HBase to all hosts success ...  
+  ```
+  
+  * 8) 启动HBase服务
+  
+  ```
+  ssh -p 22 user@HBASE_MASTER
+  
+  ${HBASE}/bin/start-hbase.sh 
+  ```
+  
+  ```
+  starting master, logging to /home/apps/application/cluster/hbase/bin/../logs/hbase-apps-master-Hadoop.out
+  Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=128m; support was removed in 8.0
+  Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=128m; support was removed in 8.0
+  172.23.0.21: starting regionserver, logging to /home/apps/application/cluster/hbase/bin/../logs/hbase-apps-regionserver-Hadoop.out
+  172.23.0.23: starting regionserver, logging to /home/apps/application/cluster/hbase/bin/../logs/hbase-apps-regionserver-Hive.out
+  172.23.0.22: starting regionserver, logging to /home/apps/application/cluster/hbase/bin/../logs/hbase-apps-regionserver-HBase.out
+  172.23.0.23: Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=128m; support was removed in 8.0
+  172.23.0.23: Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=128m; support was removed in 8.0
+  172.23.0.21: Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=128m; support was removed in 8.0
+  172.23.0.21: Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=128m; support was removed in 8.0
+  172.23.0.22: Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=128m; support was removed in 8.0
+  172.23.0.22: Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=128m; support was removed in 8.0  
+  ```
+  
+  * 9) 验证
+  
+  ```
+  # sign in HBASE master and execute bash shell
+  ssh -p 22 user@HBASE_MASTER
+  
+  ${JAVA_HOME}/bin/jps
+  ```
+  
+  ```
+  21792 Jps
+  21514 HRegionServer
+  21374 HMaster  
+  ```
+  
+  ```
+  # sign in HBASE regionserver and execute bash shell
+  ssh -p 22 user@HBASE_REGIONSERVER
+  
+  ${JAVA_HOME}/bin/jps
+  ```  
+  
+  ```
+  103762 HRegionServer
+  55116 Jps  
+  ```
+  
+  * 10) 创建测试表
+  
+  ```
+  ${HBASE}/bin/hbase shell
+  
+  SLF4J: Class path contains multiple SLF4J bindings.
+  SLF4J: Found binding in [jar:file:/home/apps/application/cluster/hbase-1.2.6/lib/slf4j-log4j12-1.7.5.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+  SLF4J: Found binding in [jar:file:/home/apps/application/cluster/hadoop-2.8.3/share/hadoop/common/lib/slf4j-log4j12-1.7.10.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+  SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+  SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+  HBase Shell; enter 'help<RETURN>' for list of supported commands.
+  Type "exit<RETURN>" to leave the HBase Shell
+  Version 1.2.6, rUnknown, Mon May 29 02:25:32 CDT 2017  
+  ```
+  
+  ```
+  hbase(main):001:0>  create 'hbase_test',{NAME=>'cf1'}
+  0 row(s) in 1.5000 seconds  
+  
+  => Hbase::Table - hbase_test
+  hbase(main):002:0> put 'hbase_test','a','cf1:v1','1'
+  0 row(s) in 0.2170 seconds  
+  
+  hbase(main):003:0> put 'hbase_test','b','cf1:v1','2'
+  0 row(s) in 0.0160 seconds  
+  
+  hbase(main):004:0>  put 'hbase_test','b','cf1:v1','3'
+  0 row(s) in 0.0160 seconds  
+  
+  hbase(main):001:0> scan 'hbase_test'
+  ROW                                  COLUMN+CELL                                                                                               
+    a                                   column=cf1:v1, timestamp=1529033250275, value=1                                                           
+    b                                   column=cf1:v1, timestamp=1529033303016, value=3                                                           
+  2 row(s) in 0.2460 seconds  
+  ```
+  
+  
