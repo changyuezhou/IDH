@@ -16,10 +16,14 @@
 ### [3.11 防火墙设置（可选）](#set_firewalld)
 ### [3.12 规划集群机器角色](#set_role)
 ## [4 MySQL 安装(Hive Metastore)](#mysql_install)
+### [4.1 单机安装](#one_install)
+### [4.2 集群安装](#multi_install)
 ## [5 JDK 安装](#jdk_install)
 ## [6 Zookeeper 安装](#zookeeper_install)
 ## [7 Hadoop 安装](#hadoop_install)
 ## [8 HBase 安装](#hbase_install)
+## [9 Hive 安装](#hive_install)
+## [10 Spark 安装](#spark_install)
 
 -------------------
 ## 1. 关于文档 <a name="about_doc"/>
@@ -418,6 +422,7 @@ UUID=7348f362-bba7-4b2f-b55f-2fdb4c3a9a41 /home/apps/application ext4 defaults 0
    
    
 ## 4. MySQL 安装 <a name="mysql_install"/>
+### 4.1 单机安装 <a name="one_install"/>
    ###  Step 1. Add MariaDB Yum Repository
    *   1) 编辑安装库
    
@@ -531,6 +536,62 @@ installation should now be secure.
 Thanks for using MariaDB!   
    ```
    
+### 4.2 集群安装 MySQL <a name="multi_install"/>
+  * 1) * 1) 用3.7步骤创建的用户登录跳板机
+  
+   ```
+   ssh -p 22 user@127.0.0.1
+   ```
+
+   * 2) 编辑文件 mysql_hosts
+   
+   ```
+   vi mysql_hosts
+   ```
+   
+  * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+
+   ```
+   172.23.0.21
+   172.23.0.22
+   172.23.0.23
+   ```
+        
+  * 4) 执行命令
+  
+  ```
+  pdsh -w ^mysql_hosts echo "[mariadb]" | awk {'print $2'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null
+  ```
+  
+  ```
+  pdsh -w ^mysql_hosts echo "name = MariaDB" | awk {'print $2 " " $3 " " $4'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null
+  ```
+  
+  ```
+  pdsh -w ^mysql_hosts echo "baseurl = http://yum.mariadb.org/10.2/centos7-amd64" | awk {'print $2 " " $3 " " $4'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null
+  ```
+  
+  ```
+  pdsh -w ^mysql_hosts echo "gpgkey = https://yum.mariadb.org/RPM-GPG-KEY-MariaDB" | awk {'print $2 " " $3 " " $4'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null
+  ```
+  
+  ```
+  pdsh -w ^mysql_hosts echo "gpgcheck = 1" | awk {'print $2 " " $3 " " $4'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null
+  ```
+  
+  ```
+  pdsh -w ^mysql_hosts sudo groupinstall -y mariadb*
+  ```
+  
+  * 5) 验证
+  
+  ```
+  ssh -p 22 user@INSTALL_MYSQL
+  
+  [apps@Elastic ~]$ mysql --version
+  mysql  Ver 15.1 Distrib 10.2.15-MariaDB, for Linux (x86_64) using readline 5.1
+  ```
+   
 ## 5 JDK 安装 <a name="jdk_install"/>
   * 1) 用3.7步骤创建的用户登录跳板机,进入install/jdk目录
   
@@ -539,7 +600,7 @@ Thanks for using MariaDB!
    cd install/jdk
    ```
       
-   * 2) 编辑文件
+   * 2) 编辑文件 jdk_hosts
    
    ```
    vi jdk_hosts
@@ -1269,6 +1330,340 @@ Installing JDK 1.8.0_171 on all hosts success
     a                                   column=cf1:v1, timestamp=1529033250275, value=1                                                           
     b                                   column=cf1:v1, timestamp=1529033303016, value=3                                                           
   2 row(s) in 0.2460 seconds  
+  ```
+   
+## 9 Hive 安装 <a name="hive_install"/>
+  * 1) 用3.7步骤创建的用户登录跳板机,进入install/hive目录
+  
+   ```
+   ssh -p 22 user@127.0.0.1
+   cd install/hive
+   ```
+
+   * 2) 编辑文件 hive_hosts
+   
+   ```
+   vi hive_hosts
+   ```
+     
+  * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+  
+   ```
+   172.23.0.21
+   172.23.0.22
+   172.23.0.23
+   ```
+   
+  * 4) 创建 Metastore（MySQL Service）,记住用户名和密码，后面的配置需要用到
+  
+  ```
+  ssh -p 22 user@MySQL_SERVER
+  ```
+  
+  ```
+  [apps@MySQL ~]$ mysql -u root -h 127.0.0.1 -p
+  Enter password: (输入密码)
+  
+  Welcome to the MariaDB monitor.  Commands end with ; or \g.
+  Your MariaDB connection id is 12
+  Server version: 10.1.33-MariaDB MariaDB Server
+
+  Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+  Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+  MariaDB [(none)]>  create database hive;
+  Query OK, 1 row affected (0.00 sec)
+
+  MariaDB [(none)]> GRANT ALL PRIVILEGES ON hive.* TO 'hive'@'%' IDENTIFIED BY '${HIVE_PASSWORD}' WITH GRANT OPTION;
+  Query OK, 0 rows affected (0.00 sec)
+
+  MariaDB [(none)]> FLUSH PRIVILEGES;
+  Query OK, 0 rows affected (0.00 sec)
+  
+  MariaDB [(none)]> exit;
+
+  [apps@MySQL ~]$ exit
+  ```
+   
+  * 5) 编辑 conf/hive-site.xml
+  
+  ```
+  <property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:mysql://${MYSQL_SERVER}:${MYSQL_PORT}/${HIVE_DB}?createDatabaseIfNotExist=true</value>
+    <description>JDBC connect string for a JDBC metastore</description>
+  </property>
+  ```
+  
+  ```
+  <property>
+    <name>javax.jdo.option.ConnectionDriverName</name>
+    <value>com.mysql.jdbc.Driver</value>
+    <description>Driver class name for a JDBC metastore</description>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>javax.jdo.option.ConnectionUserName</name>
+    <value>${HIVE_DB_USER}</value>
+    <description>Username to use against metastore database</description>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>javax.jdo.option.ConnectionPassword</name>
+    <value>${HIVE_DB_USER_PASSWORD}</value>
+    <description>password to use against metastore database</description>
+  </property> 
+  ```
+  
+  ```
+  <property>
+    <name>hive.querylog.location</name>
+    <value>${HIVE_HOME}/iotmp/${USER}</value>
+    <description>Location of Hive run time structured log file</description>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>hive.server2.logging.operation.log.location</name>
+    <value>${HIVE_HOME}/iotmp/${USER}/operation_logs</value>
+    <description>Top level directory where operation logs are stored if logging functionality is enabled</description>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>hive.exec.local.scratchdir</name>
+    <value>${HIVE_HOME}/iotmp/${USER}</value>
+    <description>Local scratch space for Hive jobs</description>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>hive.downloaded.resources.dir</name>
+    <value>${HIVE_HOME}/iotmp/${hive.session.id}_resources</value>
+    <description>Temporary local directory for added resources in the remote file system.</description>
+  </property>  
+  ```
+  
+  ```
+  <property>
+    <name>hbase.zookeeper.quorum</name>
+    <value>{ZOOKEEPER_IP1}:2181,{ZOOKEEPER_IP2}:2181,{ZOOKEEPER_IP3}:2181</value>
+  </property>  
+  ```
+  
+  * 6) 安装
+  
+  ```
+  install-hive [install] [APP_HOME] [HIVE_FILE] [HIVE_VERSION] [USER]
+  ```
+  
+  ```
+  ./install-hive.sh install /home/suxin/test_install apache-hive-1.2.1-bin.tar.gz 1.2.1 suxin
+  
+  install hive /home/suxin/test_install apache-hive-1.2.1-bin.tar.gz 1.2.1 suxin .........
+  Copying HBase 1.2.1 to all hosts...
+  Set HIVE_HOME env to all hosts...
+  Copying Hive config file to all hosts...
+  Copying Mysql connector jar file to all hosts...
+  Installing Hive to all hosts success ...  
+  ```
+  
+  * 7) 初始化 schema
+  
+  ```
+  ssh -p 22 user@HIVE_SERVER
+  ```
+  
+  ```
+  schematool -initSchema -dbType mysql
+  
+  Metastore connection URL:	 jdbc:mysql://172.23.0.31:3306/hive?createDatabaseIfNotExist=true
+  Metastore Connection Driver :	 com.mysql.jdbc.Driver
+  Metastore connection User:	 hive
+  Starting metastore schema initialization to 1.2.0
+  Initialization script hive-schema-1.2.0.mysql.sql
+  Initialization script completed
+  schemaTool completed  
+  ```
+  * 8) 验证
+  
+  ```
+  ssh -p 22 user@HIVE_SERVER
+  ```
+  
+  ```
+  [apps@Front ~]$ hive 
+
+  Logging initialized using configuration in jar:file:/home/apps/application/cluster/apache-hive-1.2.1-bin/lib/hive-common-1.2.1.jar!/hive-log4j.properties  
+
+  hive> CREATE TABLE IF NOT EXISTS test_employee ( eid int, name String, salary String, destination String) COMMENT 'Employee details' ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t' LINES TERMINATED BY '\n' STORED AS TEXTFILE;
+  OK
+  Time taken: 0.491 seconds 
+  hive> select * from test_employee;
+  OK
+  Time taken: 0.068 seconds
+  hive> drop table test_employee;
+  OK
+  Time taken: 0.445 seconds
+  hive> create external table hbase_test(key string,value string) stored by 'org.apache.hadoop.hive.hbase.HBaseStorageHandler' WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key,cf1:v1") TBLPROPERTIES("hbase.table.name" = "hbase_test");
+  OK
+  Time taken: 2.348 seconds
+  hive> select * from hbase_test;
+  OK
+   a	1
+   b	3
+  Time taken: 0.496 seconds, Fetched: 2 row(s)
+  hive> exit;
+  ```
+  
+## 10 Spark 安装 <a name="spark_install"/>
+  * 1) 用3.7步骤创建的用户登录跳板机,进入install/spark目录
+  
+   ```
+   ssh -p 22 user@127.0.0.1
+   cd install/spark
+   ```
+
+   * 2) 编辑文件 spark_hosts
+   
+   ```
+   vi spark_hosts
+   ```
+     
+  * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+  
+   ```
+   172.23.0.21
+   172.23.0.22
+   172.23.0.23
+   ```  
+   
+  * 4) 编辑文件 conf/spark-env.sh
+  
+  ```
+  # set JAVA_HOME
+  
+  JAVA_HOME=${JAVA_HOME}
+  ``` 
+  
+  * 5) 编辑文件 conf/slaves
+  
+  ```
+  # A Spark Worker will be started on each of the machines listed below.
+
+  172.23.0.24
+  172.23.0.25
+  172.23.0.26  
+  ```
+  
+  * 6) 安装
+  
+  ```
+  install-spark [install] [APP_HOME] [SPARK_FILE] [SPARK_VERSION] [HADOOP_VERSION] [HIVE_HOME] [USER]
+  ```
+  
+  ```
+  ./install-spark.sh install /home/suxin/test_install spark-2.2.1-bin-hadoop2.7.tgz 2.2.1 2.7 /home/suxin/test_install/hive suxin
+  
+  install spark /home/suxin/test_install spark-2.2.1-bin-hadoop2.7.tgz 2.2.1 2.7 /home/suxin/test_install/hive suxin .........
+  Copying Spark 2.2.1 to all hosts...
+  Set SPARK_HOME env to all hosts...
+  Copying Spark config file to all hosts...
+  Link Hive conf file to Spark for all hosts ...
+  Copying libs file to all hosts ....
+  Installing Spark to all hosts success ...  
+  ```
+  
+  * 7) 启动
+  
+  ```
+  ssh -p 22 user@SPARK_MASTER (Note: 在哪台服务器启动，那台服务器就是Master)
+  ```
+  
+  ```
+  /home/apps/application/cluster/spark/sbin/start-all.sh
+  
+  starting org.apache.spark.deploy.master.Master, logging to /home/apps/application/cluster/spark/logs/spark-apps-org.apache.spark.deploy.master.Master-1-Spark01.out
+  172.23.0.24: starting org.apache.spark.deploy.worker.Worker, logging to /home/apps/application/cluster/spark/logs/spark-apps-org.apache.spark.deploy.worker.Worker-1-Spark01.out
+  172.23.0.26: starting org.apache.spark.deploy.worker.Worker, logging to /home/apps/application/cluster/spark/logs/spark-apps-org.apache.spark.deploy.worker.Worker-1-Spark03.out
+  172.23.0.25: starting org.apache.spark.deploy.worker.Worker, logging to /home/apps/application/cluster/spark/logs/spark-apps-org.apache.spark.deploy.worker.Worker-1-Spark02.out  
+  ```
+  
+  ```
+  [apps@Spark01 ~]$ jps
+  19042 Worker
+  12963 JournalNode
+  18932 Master
+  19115 Jps  
+  ```
+  
+  * 8) 验证
+  
+  ```
+  ssh -p 22 user@SPARK_SLAVE
+  ```
+  
+  ```
+  spark-shell master=spark://Spark01:7077
+  
+  Using Spark's default log4j profile: org/apache/spark/log4j-defaults.properties
+  Setting default log level to "WARN".
+  To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+  18/06/18 15:09:52 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+  Spark context Web UI available at http://172.23.0.25:4040
+  Spark context available as 'sc' (master = local[*], app id = local-1529305793804).
+  Spark session available as 'spark'.
+  Welcome to
+      ____              __
+     / __/__  ___ _____/ /__
+    _\ \/ _ \/ _ `/ __/  '_/
+   /___/ .__/\_,_/_/ /_/\_\   version 2.2.1
+      /_/
+         
+  Using Scala version 2.11.8 (Java HotSpot(TM) 64-Bit Server VM, Java 1.8.0_171)
+  Type in expressions to have them evaluated.
+  Type :help for more information.
+
+  scala> :quit
+  ```
+  
+  ```
+  spark-sql master=spark://Spark01:7077
+  
+  log4j:WARN No appenders could be found for logger (org.apache.hadoop.util.Shell).
+  log4j:WARN Please initialize the log4j system properly.
+  log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+  Using Spark's default log4j profile: org/apache/spark/log4j-defaults.properties
+  18/06/18 15:18:28 INFO HiveMetaStore: 0: Opening raw store with implemenation class:org.apache.hadoop.hive.metastore.ObjectStore
+  18/06/18 15:18:28 INFO ObjectStore: ObjectStore, initialize called
+  18/06/18 15:18:29 INFO Persistence: Property hive.metastore.integral.jdo.pushdown unknown - will be ignored
+  18/06/18 15:18:29 INFO Persistence: Property datanucleus.cache.level2 unknown - will be ignored 
+  ....................
+  18/06/18 15:18:37 INFO SessionState: Created HDFS directory: /tmp/hive/apps/d60788e8-da64-4d80-9574-86c9d1d73815/_tmp_space.db
+  18/06/18 15:18:37 INFO HiveClientImpl: Warehouse location for Hive client (version 1.2.1) is /user/hive/warehouse
+  18/06/18 15:18:37 INFO StateStoreCoordinatorRef: Registered StateStoreCoordinator endpoint
+  
+  spark-sql> select * from hbase_test;
+  18/06/18 16:13:04 INFO SparkSqlParser: Parsing command: select * from hbase_test
+  18/06/18 16:13:05 INFO HiveMetaStore: 0: get_table : db=default tbl=hbase_test
+  18/06/18 16:13:05 INFO audit: ugi=apps	ip=unknown-ip-addr	cmd=get_table : db=default tbl=hbase_test  
+  ....................
+  18/06/18 16:13:11 INFO TaskSchedulerImpl: Removed TaskSet 0.0, whose tasks have all completed, from pool 
+  18/06/18 16:13:11 INFO DAGScheduler: ResultStage 0 (processCmd at CliDriver.java:376) finished in 0.926 s
+  18/06/18 16:13:11 INFO DAGScheduler: Job 0 finished: processCmd at CliDriver.java:376, took 1.093052 s
+   a	1
+   b	3
+  Time taken: 6.621 seconds, Fetched 2 row(s)
+  18/06/18 16:13:11 INFO CliDriver: Time taken: 6.621 seconds, Fetched 2 row(s)
+  spark-sql> exit;
   ```
   
   
