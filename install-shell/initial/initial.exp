@@ -1,0 +1,111 @@
+#!/usr/bin/expect
+
+set timeout 10
+
+set op [lindex $argv 0]
+set ServerIPList [lindex $argv 1]
+set root [lindex $argv 2]
+set password [lindex $argv 3]
+
+set new_user [lindex $argv 4]
+set new_password [lindex $argv 5]
+set new_group [lindex $argv 6]
+
+proc add_user { server user password new_user new_password group } {
+    puts "Add $new_user to $server by $user start ...\n"
+    
+    set timeout 120
+    spawn ssh "$user@$server"
+    expect { 
+       "*(yes/no)?" { send "yes\r";exp_continue }
+       "*password:" { send "$password\r" }
+    }
+    expect "*]#" { send "sudo groupadd -f $group \r" }
+    expect "*]#" { send "sudo useradd -d /home/$new_user -g $group $new_user \r" }
+    expect "*]#" { send "sudo passwd $new_user \r" }
+    expect "*password:" { send "$new_password\r" }
+    expect "*password:" { send "$new_password\r" }
+    expect "*]#" { send "exit\r" }
+
+    puts "Add $new_user to $server by $user success ...\n"
+}
+
+proc add_user_list { server_list user password new_user new_password new_group} {
+    set list [split $server_list ","]
+    foreach server $list {
+        puts "add new user: $new_user to server:$server by $user ........................."
+#        set running [add_user "$server" "$user" "$password" "$new_user" "$new_password" "$new_group"]
+    }
+}
+
+proc dist_server_ssh_key { server user password } {
+    spawn ssh-copy-id -i /home/$user/.ssh/id_rsa.pub "$server"
+    expect {
+       "*(yes/no)?" { send "yes\r";exp_continue }
+       "*password:" { send "$password\r" }
+    }
+    expect "*~]$" { send "chmod 600 ~/.ssh/authorized_keys\r" } 
+}
+
+proc dist_one_to_all_ssh_key { server_list user password } {
+    spawn ssh-keygen -t rsa
+    expect "*id_rsa):" { send "\r" }
+    expect {
+        "(y/n)?" { send "y\r";exp_continue }
+        "*passphrase):" { send "\r" }
+    }
+    expect "*again:" { send "\r" }
+    expect "*~]$" { send "chmod 700 ~/.ssh\r" }
+
+    set list [split $server_list ","]
+    foreach server $list {
+        puts "dist ssh key to server:$server ........................."
+        set running [dist_server_ssh_key "$server" "$user" "$password"]
+    }
+}
+
+proc initial_server_ssh_known_key { server user password } {
+    set timeout 120
+    spawn ssh "$server"
+    expect {
+       "*(yes/no)?" { send "yes\r";exp_continue }
+       "*password:" { send "$password\r" }
+       incorrect { exit }
+       timeout { exit }
+       eof { exit }
+    }
+    expect "*~]$" { send "exit\r" }
+}
+
+proc initial_all_server_ssh_known_key { server_list user password } {
+    set list [split $server_list ","]
+    foreach server $list {
+        puts "initial ssh key to server:$server ........................."
+        set running [initial_server_ssh_known_key "$server" "$user" "$password"]
+    }
+}
+
+if {$argc != 4 && $argc != 7} {
+    puts "Usage:expect initial.exp \[userCreate|distSSHKey|initKnownKey\] \[ServerIPList:127.0.0.1,127.0.0.2\] \[User\] \[Password\] \[NewUser\] \[NewPassword\] \[NewGroup\]"
+    exit 1
+}
+
+if {$argc == 4 && $op == "distSSHKey"} {
+    puts "dist ssh key to server list:$ServerIPList ........................."
+    set running [dist_one_to_all_ssh_key "$ServerIPList" "$root" "$password"]
+    exit 0
+}
+
+if {$argc == 4 && $op == "initKnownKey"} {
+    puts "initial ssh known key to server list:$ServerIPList ........................."
+    set running [initial_all_server_ssh_known_key "$ServerIPList" "$root" "$password"]
+    exit 0
+}
+
+if {$argc == 7 && $op == "userCreate"} {
+    puts "add new user: $new_user to server list:$ServerIPList by $root ........................."
+    set running [add_user_list "$ServerIPList" "$root" "$password" "$new_user" "$new_password" "$new_group"]
+    exit 0
+}
+
+puts "Usage:expect initial.exp \[userCreate|distSSHKey\] \[ServerIPList:127.0.0.1,127.0.0.2\] \[User\] \[Password\] \[NewUser\] \[NewPassword\] \[NewGroup\]"
