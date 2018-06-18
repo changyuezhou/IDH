@@ -67,11 +67,11 @@
    ```   
 
 ### 3.3 超级权限用户免密登录 <a name="root_create_ssh_key"/>
-   * 1) 超级权限用户登录跳板机,进入安装目录中的install/initial目录
+   * 1) 超级权限用户登录跳板机,进入安装目录中的install-shell/initial目录
    
    ```
    ssh -p 22 user@127.0.0.1
-   cd install/initial
+   cd install-shell/initial
    ```
    
    * 2) 执行命令
@@ -81,11 +81,11 @@
    ```
    
 ### 3.4 集群安装 expect <a name="install_all_expect"/>
-   * 1) 超级权限用户登录跳板机,进入install目录
+   * 1) 超级权限用户登录跳板机,进入install-shell目录
 
    ```
    ssh -p 22 user@127.0.0.1
-   cd install
+   cd install-shell
    ```
       
    * 2) 编辑文件
@@ -109,11 +109,11 @@
    ```
    
 ### 3.5 集群安装 pdsh <a name="install_all_pdsh"/>
-   * 1) 超级权限用户登录跳板机,进入install目录
+   * 1) 超级权限用户登录跳板机,进入install-shell目录
 
    ```
    ssh -p 22 user@127.0.0.1
-   cd install
+   cd install-shell
    ```
       
    * 2) 编辑文件
@@ -143,11 +143,11 @@
    ```
 
 ### 3.6 配置Hosts <a name="hosts_config"/>
-   * 1) 超级权限用户登录服务器，进入install目录
+   * 1) 超级权限用户登录服务器，进入install-shell目录
    
    ```
    ssh -p 22 user@127.0.0.1
-   cd install
+   cd install-shell
    ```
       
    * 2) 编辑文件
@@ -185,11 +185,11 @@
    ```
    
 ### 3.7 创建用户（可选）<a name="create_user"/>
-   * 1) 超级权限用户登录跳板机,进入安装目录中的initial目录
+   * 1) 超级权限用户登录跳板机,进入安装目录中的install-shell/initial目录
    
    ```
    ssh -p 22 user@127.0.0.1
-   cd install/initial
+   cd install-shell/initial
    ```
       
    * 2) 执行命令
@@ -205,11 +205,11 @@
    scp -P 2228 -r install-shell suxin@127.0.0.1:/home/suxin/
    ```
    
-   * 2) 用3.7步骤创建的用户登录跳板机,进入安装目录中的initial目录
+   * 2) 用3.7步骤创建的用户登录跳板机,进入安装目录中的install-shell/initial目录
    
    ```
    ssh -p 22 user@127.0.0.1
-   cd install/initial
+   cd install-shell/initial
    ```
       
    * 3) 执行命令
@@ -227,11 +227,11 @@
    * 5) 重复1 - 4步骤，直至完成所有服务器
 
 ### 3.9 创建挂载数据盘目录 <a name="create_mount_dir"/>
-   * 1) 用3.7步骤创建的用户登录跳板机,进入install目录
+   * 1) 用3.7步骤创建的用户登录跳板机,进入install-shell目录
    
    ```
    ssh -p 22 user@127.0.0.1
-   cd install
+   cd install-shell
    ```
       
    * 2) 编辑文件
@@ -290,11 +290,11 @@ Proceed anyway? (y,n)
    ```
    * 5) 重复1 - 4步骤，直至完成所有服务器
    
-   * 6) 超级权限用户登录跳板机,进入install目录
+   * 6) 超级权限用户登录跳板机,进入install-shell目录
    
    ```
    ssh -p 22 user@127.0.0.1
-   cd install
+   cd install-shell
    ```
       
    * 7) 编辑文件
@@ -537,10 +537,11 @@ Thanks for using MariaDB!
    ```
    
 ### 4.2 集群安装 MySQL <a name="multi_install"/>
-  * 1) * 1) 用3.7步骤创建的用户登录跳板机
+  * 1) * 1) 用3.7步骤创建的用户登录跳板机,进入install-shell目录
   
    ```
    ssh -p 22 user@127.0.0.1
+   cd install-shell
    ```
 
    * 2) 编辑文件 mysql_hosts
@@ -593,11 +594,11 @@ Thanks for using MariaDB!
   ```
    
 ## 5 JDK 安装 <a name="jdk_install"/>
-  * 1) 用3.7步骤创建的用户登录跳板机,进入install/jdk目录
+  * 1) 用3.7步骤创建的用户登录跳板机,进入install-shell/jdk目录
   
    ```
    ssh -p 22 user@127.0.0.1
-   cd install/jdk
+   cd install-shell/jdk
    ```
       
    * 2) 编辑文件 jdk_hosts
@@ -637,11 +638,11 @@ Installing JDK 1.8.0_171 on all hosts success
   ```
   
 ## 6 Zookeeper 安装 <a name="zookeeper_install"/>
-  * 1) 用3.7步骤创建的用户登录跳板机,进入install/zookeeper目录
+  * 1) 用3.7步骤创建的用户登录跳板机,进入install-shell/zookeeper目录
   
    ```
    ssh -p 22 user@127.0.0.1
-   cd install/zookeeper
+   cd install-shell/zookeeper
    ```
 
    * 2) 编辑文件 zookeeper_hosts
@@ -742,11 +743,11 @@ Installing JDK 1.8.0_171 on all hosts success
   * 10) 重复6 - 8步骤，直至完成zookeeper集群所有服务器.
   
 ## 7 Hadoop 安装 <a name="hadoop_install"/>
-  * 1) 用3.7步骤创建的用户登录跳板机,进入install/hadoop目录
+  * 1) 用3.7步骤创建的用户登录跳板机,进入install-shell/hadoop目录
   
    ```
    ssh -p 22 user@127.0.0.1
-   cd install/hadoop
+   cd install-shell/hadoop
    ```
 
    * 2) 编辑文件 hadoop_hosts
@@ -1162,11 +1163,11 @@ Installing JDK 1.8.0_171 on all hosts success
   ```
   
 ## 8 HBase 安装 <a name="hbase_install"/>
-  * 1) 用3.7步骤创建的用户登录跳板机,进入install/hbase目录
+  * 1) 用3.7步骤创建的用户登录跳板机,进入install-shell/hbase目录
   
    ```
    ssh -p 22 user@127.0.0.1
-   cd install/hbase
+   cd install-shell/hbase
    ```
 
    * 2) 编辑文件 hbase_hosts
@@ -1333,11 +1334,11 @@ Installing JDK 1.8.0_171 on all hosts success
   ```
    
 ## 9 Hive 安装 <a name="hive_install"/>
-  * 1) 用3.7步骤创建的用户登录跳板机,进入install/hive目录
+  * 1) 用3.7步骤创建的用户登录跳板机,进入install-shell/hive目录
   
    ```
    ssh -p 22 user@127.0.0.1
-   cd install/hive
+   cd install-shell/hive
    ```
 
    * 2) 编辑文件 hive_hosts
@@ -1525,11 +1526,11 @@ Installing JDK 1.8.0_171 on all hosts success
   ```
   
 ## 10 Spark 安装 <a name="spark_install"/>
-  * 1) 用3.7步骤创建的用户登录跳板机,进入install/spark目录
+  * 1) 用3.7步骤创建的用户登录跳板机,进入install-shell/spark目录
   
    ```
    ssh -p 22 user@127.0.0.1
-   cd install/spark
+   cd install-shell/spark
    ```
 
    * 2) 编辑文件 spark_hosts
