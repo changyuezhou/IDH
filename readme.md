@@ -24,6 +24,8 @@
 ## [8 HBase 安装](#hbase_install)
 ## [9 Hive 安装](#hive_install)
 ## [10 Spark 安装](#spark_install)
+## [11 Kafka 安装](#kafka_install)
+## [12 Flume 安装](#flume_install)
 
 -------------------
 ## 1. 关于文档 <a name="about_doc"/>
@@ -1667,4 +1669,102 @@ Installing JDK 1.8.0_171 on all hosts success
   spark-sql> exit;
   ```
   
+## 11 Kafka 安装 <a name="kafka_install"/>
+  * 1) 用3.7步骤创建的用户登录跳板机,进入install-shell/kafka目录
   
+   ```
+   ssh -p 22 user@127.0.0.1
+   cd install-shell/kafka
+   ```
+
+   * 2) 编辑文件 kafka_hosts
+   
+   ```
+   vi kafka_hosts
+   ```
+     
+  * 3) 将所有服务器写入文件，一行一个服务器，并保存退出
+  
+   ```
+   172.23.0.21
+   172.23.0.22
+   172.23.0.23
+   ```  
+   
+  * 4) 编辑文件 conf/server.properties
+  
+  ```
+  # The port the socket server listens on
+  port=9092
+  ```
+  
+  ```
+  # A comma separated list of directories under which to store log files
+  log.dirs=${KAFKA_HOME}/logs  
+  ```
+  
+  ```
+  ############################# Zookeeper #############################
+
+  # Zookeeper connection string (see zookeeper docs for details).
+  # This is a comma separated host:port pairs, each corresponding to a zk
+  # server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002".
+  # You can also append an optional chroot string to the urls to specify the
+  # root directory for all kafka znodes.
+  zookeeper.connect=${ZOOKEEPER_IP1}:${ZOOKEEPER_PORT},${ZOOKEEPER_IP2}:${ZOOKEEPER_PORT},${ZOOKEEPER_IP3}:${ZOOKEEPER_PORT} 
+  ```
+  
+  * 5) 安装
+  
+  ```
+  install-kafka [install] [APP_HOME] [KAFKA_FILE] [KAFKA_VERSION] [USER]
+  ```
+  
+  ```
+  ./install-kafka.sh install /home/suxin/test_install kafka_2.11-1.1.0.tgz 2.11-1.1.0 suxin
+  
+  install kafka /home/suxin/test_install kafka_2.11-1.1.0.tgz 2.11-1.1.0 suxin .........
+  Copying Kafka 2.11-1.1.0 to all hosts...
+  Set KAFKA_HOME env to all hosts...
+  Create Kafka logs directory for all hosts...
+  Copying Kafka config file to all hosts...
+  Installing Kafka to all hosts success ...
+  ```
+  
+  * 6) 修改 broker.id，此步骤需要分别登录 kafka 节点操作
+  
+  ```
+  ssh -p 22 user@kafka
+  
+  vi ${KAFKA_HOME}/config/server.properties
+  
+  # ID 必须唯一
+  broker.id=${ID}
+  ```
+  
+  * 7) 启动,分别登录kafka节点操作
+  
+  ```
+  ${KAFKA_HOME}/bin/kafka-server-start.sh -daemon ${KAFKA_HOME}/config/server.properties
+  ```
+  
+  * 8) 测试
+  
+  ```
+  ${KAFKA_HOME}/bin/kafka-topics.sh --create --zookeeper 172.23.0.27:2181,172.23.0.28:2181,172.23.0.29:2181 --topic test-topic --partitions 2 --replication-factor 2
+  
+  # you will get below message if it is created successfully
+  Created topic "test-topic".
+  
+  ${KAFKA_HOME}/bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test-topic
+  # type your message and press enter
+  First test message
+  Second test message
+  
+  ${KAFKA_HOME}/bin/kafka-console-consumer.sh --zookeeper 172.23.0.27:2181,172.23.0.28:2181,172.23.0.29:2181 --topic test-topic --from-beginning
+  # below should be output of this command
+  First test message
+  Second test message  
+  ```
+  
+## 12 Flume 安装 <a name="flume_install"/>
