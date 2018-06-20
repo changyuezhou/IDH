@@ -18,13 +18,13 @@ proc add_user { server user password new_user new_password group } {
     spawn ssh "$user@$server"
     expect { 
        "*(yes/no)?" { send "yes\r";exp_continue }
-       "*password:" { send "$password\r" }
+       "*assword:" { send "$password\r" }
     }
     expect "*]#" { send "sudo groupadd -f $group \r" }
     expect "*]#" { send "sudo useradd -d /home/$new_user -g $group $new_user \r" }
     expect "*]#" { send "sudo passwd $new_user \r" }
-    expect "*password:" { send "$new_password\r" }
-    expect "*password:" { send "$new_password\r" }
+    expect "*assword:" { send "$new_password\r" }
+    expect "*assword:" { send "$new_password\r" }
     expect "*]#" { send "exit\r" }
 
     puts "Add $new_user to $server by $user success ...\n"
@@ -42,7 +42,7 @@ proc dist_server_ssh_key { server user password } {
     spawn ssh-copy-id -i /home/$user/.ssh/id_rsa.pub "$server"
     expect {
        "*(yes/no)?" { send "yes\r";exp_continue }
-       "*password:" { send "$password\r" }
+       "*assword:" { send "$password\r" }
     }
     expect "*~]$" { send "chmod 600 ~/.ssh/authorized_keys\r" } 
 }
@@ -69,7 +69,7 @@ proc initial_server_ssh_known_key { server user password } {
     spawn ssh "$server"
     expect {
        "*(yes/no)?" { send "yes\r";exp_continue }
-       "*password:" { send "$password\r" }
+       "*assword:" { send "$password\r" }
        incorrect { exit }
        timeout { exit }
        eof { exit }
