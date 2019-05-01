@@ -20,12 +20,25 @@ proc add_user { server user password new_user new_password group } {
        "*(yes/no)?" { send "yes\r";exp_continue }
        "*assword:" { send "$password\r" }
     }
-    expect "*]#" { send "sudo groupadd -f $group \r" }
-    expect "*]#" { send "sudo useradd -d /home/$new_user -g $group $new_user \r" }
-    expect "*]#" { send "sudo passwd $new_user \r" }
+    expect {
+       "*]#" { send "sudo groupadd -f $group \r" }
+       "*]$" { send "sudo groupadd -f $group \r" }
+    }
+    expect {
+       "*assword:" { send "$password\r" }
+       "*]#" { send "sudo useradd -d /home/$new_user -g $group $new_user \r" }
+       "*]$" { send "sudo useradd -d /home/$new_user -g $group $new_user \r" }
+    }
+    expect {
+       "*]#" { send "sudo passwd $new_user \r" }
+       "*]$" { send "sudo passwd $new_user \r" }
+    }
     expect "*assword:" { send "$new_password\r" }
     expect "*assword:" { send "$new_password\r" }
-    expect "*]#" { send "exit\r" }
+    expect {
+       "*]#" { send "exit\r" }
+       "*]$" { send "exit\r" }
+    }
 
     puts "Add $new_user to $server by $user success ...\n"
 }
@@ -34,7 +47,7 @@ proc add_user_list { server_list user password new_user new_password new_group} 
     set list [split $server_list ","]
     foreach server $list {
         puts "add new user: $new_user to server:$server by $user ........................."
-#        set running [add_user "$server" "$user" "$password" "$new_user" "$new_password" "$new_group"]
+        set running [add_user "$server" "$user" "$password" "$new_user" "$new_password" "$new_group"]
     }
 }
 
@@ -43,11 +56,14 @@ proc dist_server_ssh_key { server user password } {
     expect {
        "*(yes/no)?" { send "yes\r";exp_continue }
        "*assword:" { send "$password\r" }
+       "*option)" { return 0 }
+       "*WARNING:" { return 0 }
     }
     expect "*~]$" { send "chmod 600 ~/.ssh/authorized_keys\r" } 
 }
 
-proc dist_one_to_all_ssh_key { server_list user password } {
+proc generate_pub_key { user } {
+    puts "Generate $user public key start ...\n"
     spawn ssh-keygen -t rsa
     expect "*id_rsa):" { send "\r" }
     expect {
@@ -55,8 +71,16 @@ proc dist_one_to_all_ssh_key { server_list user password } {
         "*passphrase):" { send "\r" }
     }
     expect "*again:" { send "\r" }
-    expect "*~]$" { send "chmod 700 ~/.ssh\r" }
+    expect "*]$" { send "chmod 700 ~/.ssh\r" }
+}
 
+proc dist_one_to_all_ssh_key { server_list user password } {
+    if {[file exists /home/$user/.ssh/id_rsa.pub]} {
+        puts "public $user key is exists ...\n"
+    } else {
+        set running [generate_pub_key "$user"]
+    }
+    
     set list [split $server_list ","]
     foreach server $list {
         puts "dist ssh key to server:$server ........................."
@@ -65,16 +89,22 @@ proc dist_one_to_all_ssh_key { server_list user password } {
 }
 
 proc initial_server_ssh_known_key { server user password } {
-    set timeout 120
-    spawn ssh "$server"
+    set timeout 3
+    spawn ssh "$user@$server"
     expect {
-       "*(yes/no)?" { send "yes\r";exp_continue }
+       "*(yes/no)?" { send "yes\r" }
        "*assword:" { send "$password\r" }
-       incorrect { exit }
-       timeout { exit }
-       eof { exit }
+       "*]$" { send "exit\r" }
+       "*]#" { send "exit\r" }       
+       eof
     }
-    expect "*~]$" { send "exit\r" }
+    
+    puts " ############################### "
+        
+    expect {
+       "*]$" { send "exit\r\r" }
+       "*]#" { send "exit\r\r" }
+    }
 }
 
 proc initial_all_server_ssh_known_key { server_list user password } {
@@ -93,6 +123,7 @@ if {$argc != 4 && $argc != 7} {
 if {$argc == 4 && $op == "distSSHKey"} {
     puts "dist ssh key to server list:$ServerIPList ........................."
     set running [dist_one_to_all_ssh_key "$ServerIPList" "$root" "$password"]
+    
     exit 0
 }
 
