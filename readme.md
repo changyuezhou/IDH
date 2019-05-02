@@ -563,23 +563,23 @@ Thanks for using MariaDB!
   * 4) 执行命令
   
   ```
-  pdsh -w ^mysql_hosts echo "[mariadb]" | awk {'print $2'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null
+  pdsh -w ^mysql_hosts "echo "[mariadb]" | awk {'print $2'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null"
   ```
   
   ```
-  pdsh -w ^mysql_hosts echo "name = MariaDB" | awk {'print $2 " " $3 " " $4'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null
+  pdsh -w ^mysql_hosts "echo "name = MariaDB" | awk {'print $2 " " $3 " " $4'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null"
   ```
   
   ```
-  pdsh -w ^mysql_hosts echo "baseurl = http://yum.mariadb.org/10.2/centos7-amd64" | awk {'print $2 " " $3 " " $4'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null
+  pdsh -w ^mysql_hosts "echo "baseurl = http://yum.mariadb.org/10.2/centos7-amd64" | awk {'print $2 " " $3 " " $4'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null"
   ```
   
   ```
-  pdsh -w ^mysql_hosts echo "gpgkey = https://yum.mariadb.org/RPM-GPG-KEY-MariaDB" | awk {'print $2 " " $3 " " $4'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null
+  pdsh -w ^mysql_hosts "echo "gpgkey = https://yum.mariadb.org/RPM-GPG-KEY-MariaDB" | awk {'print $2 " " $3 " " $4'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null"
   ```
   
   ```
-  pdsh -w ^mysql_hosts echo "gpgcheck = 1" | awk {'print $2 " " $3 " " $4'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null
+  pdsh -w ^mysql_hosts "echo "gpgcheck = 1" | awk {'print $2 " " $3 " " $4'} | sudo tee --append /etc/yum.repos.d/MariaDB.repo \> /dev/null"
   ```
   
   ```
