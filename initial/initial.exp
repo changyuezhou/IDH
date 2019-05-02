@@ -11,6 +11,11 @@ set new_user [lindex $argv 4]
 set new_password [lindex $argv 5]
 set new_group [lindex $argv 6]
 
+set source_file [lindex $argv 4]
+set desc_file [lindex $argv 5]
+
+set command [lindex $argv 4]
+
 proc add_user { server user password new_user new_password group } {
     puts "Add $new_user to $server by $user start ...\n"
     
@@ -116,7 +121,7 @@ proc initial_all_server_ssh_known_key { server_list user password } {
     }
 }
 
-proc clear_user_known_host_and_auth { server user password } {
+proc clear_user_known_host { server user password } {
     puts "Clear $server $user ssh known hosts and auth ........"
     set timeout 3
     spawn ssh "$user@$server"
@@ -128,11 +133,7 @@ proc clear_user_known_host_and_auth { server user password } {
     expect "*~]$*" { 
         if {[file exists /home/$user/.ssh/known_hosts]} {
             send "rm /home/$user/.ssh/known_hosts \r"
-        }
-        
-        if {[file exists /home/$user/.ssh/authorized_keys]} {
-            send "rm /home/$user/.ssh/authorized_keys \r"
-        }            
+        }          
     }
     
     expect "*~]$*" { puts "exit...\r";send "exit \r" }
@@ -144,13 +145,94 @@ proc clear_all_server_ssh_known_key { server_list user password } {
     set list [split $server_list ","]
     foreach server $list {
         puts "Clear ssh key to server:$server ........................."
-        set running [clear_user_known_host_and_auth "$server" "$user" "$password"]
+        set running [clear_user_known_host "$server" "$user" "$password"]
     }
 }
 
-if {$argc != 4 && $argc != 7} {
-    puts "Usage:expect initial.exp \[userCreate|distSSHKey|initKnownKey|clearKnownHosts\] \[ServerIPList:127.0.0.1,127.0.0.2\] \[User\] \[Password\] \[NewUser\] \[NewPassword\] \[NewGroup\]"
+proc clear_user_auth { server user password } {
+    puts "Clear $server $user ssh known hosts and auth ........"
+    set timeout 3
+    spawn ssh "$user@$server"
+    expect {
+       "*(yes/no)?" { send "yes\r";exp_continue }
+       "*assword:" { send "$password\r" }
+    }
+    
+    expect "*~]$*" {
+        if {[file exists /home/$user/.ssh/authorized_keys]} {
+            send "rm /home/$user/.ssh/authorized_keys \r"
+        }            
+    }
+    
+    expect "*~]$*" { puts "exit...\r";send "exit \r" }
+    
+    puts "Clear $server $user ssh auth success ....."
+}
+
+proc clear_all_server_ssh_auth { server_list user password } {
+    set list [split $server_list ","]
+    foreach server $list {
+        puts "Clear ssh auth to server:$server ........................."
+        set running [clear_user_auth "$server" "$user" "$password"]
+    }
+}
+
+proc dist_server_file { server user password source_file desc_file } {
+    puts "dist file:$source_file to $server $desc_file ........"
+    spawn scp "$source_file" "$user@$server:/home/$user/$desc_file"
+    expect {
+       "*(yes/no)?" { send "yes\r";exp_continue }
+       "*assword:" { send "$password\r" }
+       "*~]$*" {}
+    }
+
+    puts "dist file:$source_file to $server $desc_file success ....."
+}
+
+proc dist_all_server_file { server_list user password source_file desc_file } {
+    set list [split $server_list ","]
+    foreach server $list {
+        puts "dist file to server:$server ........................."
+        set running [dist_server_file "$server" "$user" "$password" "$source_file" "$desc_file"]
+    }
+}
+
+proc exec_server_command { server user password command } {
+    puts "Execute $server $command ........"
+    set timeout 3
+    spawn ssh "$user@$server"
+    expect {
+       "*(yes/no)?" { send "yes\r";exp_continue }
+       "*assword:" { send "$password\r" }
+    }
+    
+    expect "*~]$*" {
+       send "$command \r"    
+    }
+    
+    expect "*~]$*" { puts "exit...\r";send "exit \r" }
+    
+    puts "Execute $server $command success ....."
+}
+
+proc exec_all_server_command { server_list user password command } {
+    set list [split $server_list ","]
+    foreach server $list {
+        puts "execute server:$server command: $command ........................."
+        set running [exec_server_command "$server" "$user" "$password" "$command"]
+    }
+}
+
+if {$argc != 4 && $argc != 7 && $argc != 6 && $argc != 5} {
+    puts "Usage:expect initial.exp \[userCreate|distSSHKey|initKnownKey|clearKnownHosts|clearAuth|distFile|executeCmd\] \[ServerIPList:127.0.0.1,127.0.0.2\] \[User\] \[Password\] \[NewUser|Source|Command\] \[NewPassword|Desc\] \[NewGroup\]"
     exit 1
+}
+
+if {$argc == 4 && $op == "clearAuth"} {
+    puts "clear server user auth list:$ServerIPList known hosts ........................."
+    set running [clear_all_server_ssh_auth "$ServerIPList" "$root" "$password"]
+    
+    exit 0
 }
 
 if {$argc == 4 && $op == "clearKnownHosts"} {
@@ -173,10 +255,24 @@ if {$argc == 4 && $op == "initKnownKey"} {
     exit 0
 }
 
+if {$argc == 5 && $op == "executeCmd"} {
+    puts "Execute server list:$ServerIPList command:$command ........................."
+    set running [exec_all_server_command "$ServerIPList" "$root" "$password" "$command"]
+    
+    exit 0
+}
+
+if {$argc == 6 && $op == "distFile"} {
+    puts "dist file:$source_file to server list:$ServerIPList desc:$desc_file ........................."
+    set running [dist_all_server_file "$ServerIPList" "$root" "$password" "$source_file" "$desc_file"]
+    
+    exit 0
+}
+
 if {$argc == 7 && $op == "userCreate"} {
     puts "add new user: $new_user to server list:$ServerIPList by $root ........................."
     set running [add_user_list "$ServerIPList" "$root" "$password" "$new_user" "$new_password" "$new_group"]
     exit 0
 }
 
-puts "Usage:expect initial.exp \[userCreate|distSSHKey|clearKnownHost\] \[ServerIPList:127.0.0.1,127.0.0.2\] \[User\] \[Password\] \[NewUser\] \[NewPassword\] \[NewGroup\]"
+puts "Usage:expect initial.exp \[userCreate|distSSHKey|clearKnownHost\clearAuth|distFile|executeCmd\] \[ServerIPList:127.0.0.1,127.0.0.2\] \[User\] \[Password\] \[NewUser|Source|Command\] \[NewPassword|Desc\] \[NewGroup\]"
