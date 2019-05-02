@@ -140,6 +140,14 @@ proc clear_user_known_host_and_auth { server user password } {
     puts "Clear $server $user ssh known hosts and auth success ....."
 }
 
+proc clear_all_server_ssh_known_key { server_list user password } {
+    set list [split $server_list ","]
+    foreach server $list {
+        puts "Clear ssh key to server:$server ........................."
+        set running [clear_user_known_host_and_auth "$server" "$user" "$password"]
+    }
+}
+
 if {$argc != 4 && $argc != 7} {
     puts "Usage:expect initial.exp \[userCreate|distSSHKey|initKnownKey|clearKnownHosts\] \[ServerIPList:127.0.0.1,127.0.0.2\] \[User\] \[Password\] \[NewUser\] \[NewPassword\] \[NewGroup\]"
     exit 1
@@ -147,7 +155,7 @@ if {$argc != 4 && $argc != 7} {
 
 if {$argc == 4 && $op == "clearKnownHosts"} {
     puts "clear server list:$ServerIPList known hosts ........................."
-    set running [clear_user_known_host_and_auth "$ServerIPList" "$root" "$password"]
+    set running [clear_all_server_ssh_known_key "$ServerIPList" "$root" "$password"]
     
     exit 0
 }
